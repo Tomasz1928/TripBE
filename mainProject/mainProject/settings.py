@@ -1,5 +1,7 @@
 from pathlib import Path
 import os
+import dj_database_url
+
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-hf6dfaay-f!@ajrae3&ku&^1_kt#f(9sba6y9*__l4rkrmfi16'
