@@ -47,14 +47,7 @@ TEMPLATES = [{
 WSGI_APPLICATION = 'mainProject.wsgi.application'
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'postgres',
-        'USER': os.getenv('DB_user', ''),
-        'PASSWORD': os.getenv('DB_password', ''),
-        'HOST': os.getenv('DB_host', ''),
-        'PORT': os.getenv('DB_port', ''),
-    }
+    'default': dj_database_url.config(default=os.environ.get('DATABASE_URL'))
 }
 
 LANGUAGE_CODE = 'en-us'
