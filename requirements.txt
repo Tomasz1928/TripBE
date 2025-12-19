@@ -2,3 +2,4 @@ Django>=4.2
 graphene-django
 gunicorn==22.0.0
 graphene~=3.4.3
+psycopg2-binary==2.9.9
