@@ -1,7 +1,6 @@
 from django.db import transaction
 from tripAppBE.models import Trip, UserTrip
 
-
 def create_trip(name, description, user):
     try:
         with transaction.atomic():
@@ -12,6 +11,21 @@ def create_trip(name, description, user):
 
     except Exception as e:
         return {"trip": None, "ok": False}
+
+
+def delete_trip(trip_id, user):
+    try:
+        trip = Trip.objects.filter(trip_id=trip_id).first()
+
+        if trip.trip_owner != user:
+            return {"ok": False, "message": "Only trip owner can delete trip"}
+
+        with transaction.atomic():
+            trip.delete()
+            return {"ok": True, "message": "Trip deleted"}
+
+    except Exception as e:
+        return {"ok": False, "message": str(e)}
 
 
 def join_trip(trip_id, user):

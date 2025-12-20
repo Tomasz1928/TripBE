@@ -1,7 +1,7 @@
 from django.db import transaction
 
 from tripAppBE.models import Cost, Splited
-from django.db.models import Q, Sum, F, Exists, OuterRef
+from django.db.models import Q, Sum, F
 from decimal import Decimal, ROUND_HALF_UP
 
 

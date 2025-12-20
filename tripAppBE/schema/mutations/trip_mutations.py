@@ -1,6 +1,6 @@
 import graphene
 
-from tripAppBE.services.trip_service import create_trip, join_trip
+from tripAppBE.services.trip_service import create_trip, join_trip, delete_trip
 
 
 class CreateTrip(graphene.Mutation):
@@ -32,4 +32,16 @@ class JoinTrip(graphene.Mutation):
         result = join_trip(tripId, user)
         return JoinTrip(ok=result['ok'], message=result['message'])
 
+
+class DeleteTrip(graphene.Mutation):
+    class Arguments:
+        tripId = graphene.ID(required=True)
+
+    ok = graphene.Boolean()
+    message = graphene.String()
+
+    def mutate(self, info, tripId):
+        user = info.context.user
+        result = delete_trip(tripId, user)
+        return DeleteTrip(ok=result['ok'], message=result['message'])
 

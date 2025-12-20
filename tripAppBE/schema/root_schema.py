@@ -20,6 +20,7 @@ class Mutation(graphene.ObjectType):
     delete_cost = DeleteCost.Field()
     delete_user_splits = DeleteUserSplits.Field()
     fully_settlement = FullySettlement.Field()
+    delete_trip = DeleteTrip.Field()
 
 
 class Query(AuthQuery, GetCostsPerTrip, GetPayback, GetCostsSumPerTrip, GetSplitsInfo, GetTripList, graphene.ObjectType):
