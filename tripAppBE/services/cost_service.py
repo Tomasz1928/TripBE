@@ -1,7 +1,9 @@
 from decimal import Decimal, ROUND_HALF_UP
 
 from django.db import transaction
-from django.db.models import Q, Sum, F
+from django.db.models import Q, Sum, F, Case, When, Value, BooleanField
+
+
 from tripAppBE.models import Cost, Splited
 
 
@@ -67,13 +69,21 @@ def update_payment(cost_id, participant_id, pay_back_value):
     pay_back_value = Decimal(pay_back_value)
 
     with transaction.atomic():
-        updated = Splited.objects.filter(
-            cost_id=cost_id,
-            participant_id=participant_id
-        ).update(
-            pay_back_value=pay_back_value,
-            to_pay_back_value=F("split_value") - pay_back_value,
-            payment=F("split_value") - pay_back_value <= Decimal("0.00")
+        updated = (
+            Splited.objects
+            .filter(cost_id=cost_id, participant_id=participant_id)
+            .update(
+                pay_back_value=pay_back_value,
+                to_pay_back_value=F("split_value") - pay_back_value,
+                payment=Case(
+                    When(
+                        split_value__lte=pay_back_value,
+                        then=Value(True)
+                    ),
+                    default=Value(False),
+                    output_field=BooleanField()
+                )
+            )
         )
 
         if not updated:
@@ -86,7 +96,7 @@ def update_payment(cost_id, participant_id, pay_back_value):
 
         Cost.objects.filter(cost_id=cost_id).update(payment=not unpaid_exists)
 
-        return {"ok": True}
+        return {"ok": True, "message": "Payments update"}
 
 
 def delete_cost(cost_id):
