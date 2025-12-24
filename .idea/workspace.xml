@@ -5,41 +5,16 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="53a3917c-4b16-43c3-9e7d-0b797c3aae7b" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/profiles_settings.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/pythonProject.iml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/mainProject/db.sqlite3" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/mainProject/mainProject/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/mainProject/mainProject/asgi.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/mainProject/mainProject/settings.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/mainProject/mainProject/urls.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/mainProject/mainProject/wsgi.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/mainProject/manage.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/mainProject/tripAppBE/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/mainProject/tripAppBE/admin.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/mainProject/tripAppBE/apps.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/mainProject/tripAppBE/middleware.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/mainProject/tripAppBE/migrations/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/mainProject/tripAppBE/models.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/mainProject/tripAppBE/schema/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/mainProject/tripAppBE/schema/mutations/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/mainProject/tripAppBE/schema/mutations/auth_mutations.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/mainProject/tripAppBE/schema/mutations/create_trip.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/mainProject/tripAppBE/schema/queries/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/mainProject/tripAppBE/schema/queries/user_queries.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/mainProject/tripAppBE/schema/root_schema.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/mainProject/tripAppBE/schema/types/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/mainProject/tripAppBE/schema/types/user_type.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/mainProject/tripAppBE/services/auth_service.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/mainProject/tripAppBE/services/trip_service.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/mainProject/tripAppBE/tests.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/mainProject/tripAppBE/urls.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/mainProject/tripAppBE/views.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/requirements.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tripAppBE/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/tripAppBE/models.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tripAppBE/schema/mutations/cost_mutation.py" beforeDir="false" afterPath="$PROJECT_DIR$/tripAppBE/schema/mutations/cost_mutation.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tripAppBE/schema/mutations/trip_mutations.py" beforeDir="false" afterPath="$PROJECT_DIR$/tripAppBE/schema/mutations/trip_mutations.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tripAppBE/schema/queries/cost_queries.py" beforeDir="false" afterPath="$PROJECT_DIR$/tripAppBE/schema/queries/cost_queries.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tripAppBE/schema/queries/trip_queries.py" beforeDir="false" afterPath="$PROJECT_DIR$/tripAppBE/schema/queries/trip_queries.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tripAppBE/schema/root_schema.py" beforeDir="false" afterPath="$PROJECT_DIR$/tripAppBE/schema/root_schema.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tripAppBE/schema/types/cost_type.py" beforeDir="false" afterPath="$PROJECT_DIR$/tripAppBE/schema/types/cost_type.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tripAppBE/schema/types/trip_type.py" beforeDir="false" afterPath="$PROJECT_DIR$/tripAppBE/schema/types/trip_type.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tripAppBE/services/cost_service.py" beforeDir="false" afterPath="$PROJECT_DIR$/tripAppBE/services/cost_service.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tripAppBE/services/trip_service.py" beforeDir="false" afterPath="$PROJECT_DIR$/tripAppBE/services/trip_service.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -49,9 +24,9 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
-  <component name="ProjectColorInfo"><![CDATA[{
-  "associatedIndex": 8
-}]]></component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 8
+}</component>
   <component name="ProjectId" id="36UDcKhuMNTVravfKJyfl3aoLi0" />
   <component name="ProjectLevelVcsManager" settingsEditedManually="true">
     <ConfirmationsSetting value="2" id="Add" />
@@ -64,12 +39,14 @@
   "keyToString": {
     "RunOnceActivity.OpenProjectViewOnStart": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
-    "git-widget-placeholder": "master",
-    "last_opened_file_path": "D:/Python Projekty/tripApp/pythonProject/mainProject/tripAppBE"
+    "git-widget-placeholder": "main",
+    "last_opened_file_path": "D:/git/Nowy folder/tripAppBE"
   }
 }]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="D:\git\Nowy folder\tripAppBE" />
+      <recent name="D:\git\Nowy folder\mainProject" />
       <recent name="D:\Python Projekty\tripApp\pythonProject\mainProject\tripAppBE" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
