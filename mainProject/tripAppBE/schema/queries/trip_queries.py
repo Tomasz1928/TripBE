@@ -3,6 +3,7 @@ import graphene
 from tripAppBE.models import Trip
 from tripAppBE.schema.types.trip_type import TripType
 from tripAppBE.services.trip_service import get_trip_details, get_trip_list
+from graphql import GraphQLError
 
 
 class GetTripList(graphene.ObjectType):
@@ -11,7 +12,6 @@ class GetTripList(graphene.ObjectType):
 
     def resolve_trip_list(self, info):
         user = info.context.user
-
         return get_trip_list(user)
 
     def resolve_trip(self, info, trip_id):

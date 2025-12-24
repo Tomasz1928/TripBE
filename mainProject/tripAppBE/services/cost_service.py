@@ -1,238 +1,255 @@
-from django.db import transaction
-
-from tripAppBE.models import Cost, Splited
-from django.db.models import Q, Sum, F, Exists, OuterRef
 from decimal import Decimal, ROUND_HALF_UP
 
+from django.db import transaction
+from django.db.models import Q, Sum, F
+from tripAppBE.models import Cost, Splited
 
-def add_cost(trip_id, title, payer_id, overall_value, split_object_list):
-    try:
-        with transaction.atomic():
-            payment_flag = (
-                len(split_object_list) == 1
-                and split_object_list[0].user_id == payer_id
-            )
 
-            cost = Cost.objects.create(
-                trip_id=trip_id,
-                cost_name=title,
-                overall_value=overall_value,
-                payment=payment_flag
-            )
+# ======================================================
+# COST MANAGEMENT
+# ======================================================
 
-            splits = [
-                Splited(
-                    cost=cost,
-                    user_id=obj.user_id,
-                    payer_id=payer_id,
-                    payment=(payer_id == obj.user_id),
-                    split_value=obj.split_value,
-                    pay_back_value=(obj.split_value if payer_id == obj.user_id else 0),
-                    to_pay_back_value=(0 if payer_id == obj.user_id else obj.split_value)
+def add_cost(trip_id, title, payer_participant_id, overall_value, split_object_list):
+    """
+    Dodaje koszt + splity (bulk)
+    """
+    payment_flag = (
+        len(split_object_list) == 1
+        and split_object_list[0].participant_id == payer_participant_id
+    )
+
+    with transaction.atomic():
+        cost = Cost.objects.create(
+            trip_id=trip_id,
+            cost_name=title,
+            overall_value=overall_value,
+            payment=payment_flag
+        )
+
+        splits = [
+            Splited(
+                cost_id=cost.cost_id,
+                participant_id=obj.participant_id,
+                payer_id=payer_participant_id,
+                payment=(payer_participant_id == obj.participant_id),
+                split_value=obj.split_value,
+                pay_back_value=(
+                    obj.split_value if payer_participant_id == obj.participant_id else Decimal("0.00")
+                ),
+                to_pay_back_value=(
+                    Decimal("0.00") if payer_participant_id == obj.participant_id else obj.split_value
                 )
-                for obj in split_object_list
-            ]
-            Splited.objects.bulk_create(splits)
+            )
+            for obj in split_object_list
+        ]
 
-            return {"ok": True, "cost": cost, "splits": splits, "message": "Cost successfully created"}
+        Splited.objects.bulk_create(splits)
 
-    except Exception as e:
-        return {"ok": False, "cost": None, "splits": None, "message": str(e)}
+        return {"ok": True, "cost": cost}
 
 
 def update_cost(cost_id, **fields):
-    try:
-        updated = Cost.objects.filter(cost_id=cost_id).update(**fields)
+    """
+    Aktualizacja kosztu (bez SELECT)
+    """
+    updated = Cost.objects.filter(cost_id=cost_id).update(**fields)
+
+    if not updated:
+        return {"ok": False, "message": "Cost not found"}
+
+    return {"ok": True, "message": "Cost updated"}
+
+
+def update_payment(cost_id, participant_id, pay_back_value):
+    """
+    Aktualizacja płatności splitu + status kosztu
+    """
+    pay_back_value = Decimal(pay_back_value)
+
+    with transaction.atomic():
+        updated = Splited.objects.filter(
+            cost_id=cost_id,
+            participant_id=participant_id
+        ).update(
+            pay_back_value=pay_back_value,
+            to_pay_back_value=F("split_value") - pay_back_value,
+            payment=F("split_value") - pay_back_value <= Decimal("0.00")
+        )
 
         if not updated:
-            return {"ok": False, "message": "Cost not found"}
-
-        return {"ok": True, "message": "Cost updated"}
-
-    except Exception as e:
-        return {"ok": False, "message": str(e)}
-
-
-def update_payment(cost_id, user_id, pay_back_value):
-    pay_back_value = Decimal(pay_back_value)
-    with transaction.atomic():
-        try:
-            split_obj = Splited.objects.select_for_update().get(cost_id=cost_id, user_id=user_id)
-
-            to_pay_back = split_obj.split_value - pay_back_value
-            if abs(to_pay_back) < 1:
-                to_pay_back = 0
-
-            split_obj.pay_back_value = pay_back_value
-            split_obj.to_pay_back_value = to_pay_back
-            split_obj.payment = abs(split_obj.split_value - pay_back_value) < 0.99
-            split_obj.save(update_fields=['pay_back_value', 'to_pay_back_value', 'payment'])
-
-            all_paid = not Splited.objects.filter(cost_id=cost_id, payment=False).exists()
-            Cost.objects.filter(cost_id=cost_id).update(payment=all_paid)
-
-            return {"ok": True, "message": "Payment updated"}
-
-        except Splited.DoesNotExist:
             return {"ok": False, "message": "Split not found"}
-        except Exception as e:
-            return {"ok": False, "message": str(e)}
+
+        unpaid_exists = Splited.objects.filter(
+            cost_id=cost_id,
+            payment=False
+        ).exists()
+
+        Cost.objects.filter(cost_id=cost_id).update(payment=not unpaid_exists)
+
+        return {"ok": True}
 
 
 def delete_cost(cost_id):
-    try:
-        deleted, _ = Cost.objects.filter(cost_id=cost_id).delete()
+    """
+    Usuwa koszt (cascade splity)
+    """
+    deleted, _ = Cost.objects.filter(cost_id=cost_id).delete()
 
-        if not deleted:
-            return {"ok": False, "message": "Cost dont deleted"}
+    if not deleted:
+        return {"ok": False, "message": "Cost not deleted"}
 
-        return {"ok": True, "message": "Cost deleted"}
-
-    except Exception as e:
-        return {"ok": False, "message": str(e)}
-
-
-def delete_split_by_user(cost_id, user_id):
-    try:
-        deleted, _ = Splited.objects.filter(cost__cost_id=cost_id, user_id=user_id).delete()
-
-        if not deleted:
-            return {"ok": False, "message": "User is not assigned to this cost"}
-
-        return {"ok": True, "message": "User removed from cost"}
-
-    except Exception as e:
-        return {"ok": False, "message": str(e)}
+    return {"ok": True, "message": "Cost deleted"}
 
 
-def get_cost_sum_for_user_per_trip(user, trip_id):
-    try:
-        total = (Splited.objects.filter(user=user, cost__trip_id=trip_id)
-                 .aggregate(total_split=Sum('split_value')))
+def delete_split_by_user(cost_id, participant_id):
+    """
+    Usuwa split użytkownika z kosztu
+    """
+    deleted, _ = Splited.objects.filter(
+        cost_id=cost_id,
+        participant_id=participant_id
+    ).delete()
 
-        return total["total_split"].quantize(Decimal('0.00'), rounding=ROUND_HALF_UP)
+    if not deleted:
+        return {"ok": False, "message": "Participant is not assigned to this cost"}
 
-    except Exception as e:
-        return {"total": None, "Message": e}
+    return {"ok": True, "message": "Participant removed from cost"}
 
 
-def get_all_cost_for_user_per_trip(user, trip_id):
-    try:
-        costs = (Cost.objects.filter(trip_id=trip_id)
-                 .filter(Q(splited__user=user) | Q(splited__payer=user))
-                 .order_by("-created_at")
-                 )
+# ======================================================
+# COST QUERIES
+# ======================================================
 
-        seen = set()
-        unique_costs = []
-        for c in costs:
-            if c.cost_id not in seen:
-                unique_costs.append(c)
-                seen.add(c.cost_id)
+def get_cost_sum_for_participant_per_trip(participant_id, trip_id):
+    total = (
+        Splited.objects
+        .filter(cost__trip_id=trip_id, participant_id=participant_id)
+        .aggregate(total=Sum("split_value"))
+        ["total"]
+    )
 
-        return unique_costs
+    return (total or Decimal("0.00")).quantize(
+        Decimal("0.00"),
+        rounding=ROUND_HALF_UP
+    )
 
-    except Exception as e:
-        return {"Message": str(e)}
+
+def get_all_cost_for_participant_per_trip(participant_id, trip_id):
+    return (
+        Cost.objects
+        .filter(trip_id=trip_id)
+        .filter(
+            Q(splited__participant_id=participant_id) |
+            Q(splited__payer_id=participant_id)
+        )
+        .distinct()
+        .order_by("-created_at")
+    )
 
 
 def get_split_info_per_cost(cost_id):
-    try:
-        return Splited.objects.filter(cost__cost_id=cost_id)
-
-    except Exception as e:
-        return {"Message": e}
+    return Splited.objects.filter(cost_id=cost_id)
 
 
+# ======================================================
+# PAYBACK / SETTLEMENT
+# ======================================================
 
-def get_payback_user_relation_per_trip(trip_id, user_id):
-    list1 = (
-        Splited.objects.filter(cost__trip__trip_id=trip_id, payment=False, payer_id=user_id)
-        .exclude(user_id=user_id)
-        .select_related('user')
-        .values('user_id', 'user__username')
-        .annotate(total=Sum('split_value'))
+def get_payback_participant_relation_per_trip(trip_id, participant_id):
+    """
+    Oblicza relacje kto komu ile jest winien
+    """
+    they_owe_me = (
+        Splited.objects
+        .filter(cost__trip_id=trip_id, payment=False, payer_id=participant_id)
+        .exclude(participant_id=participant_id)
+        .values(
+            "participant_id",
+            "participant__nickname",
+            "participant__user_id"
+        )
+        .annotate(total=Sum("split_value"))
     )
 
-    list2 = (
-        Splited.objects.filter(cost__trip__trip_id=trip_id, payment=False, user_id=user_id)
-        .exclude(payer_id=user_id)
-        .select_related('payer')
-        .values('payer_id', 'payer__username')
-        .annotate(total=Sum('split_value'))
+    i_owe_them = (
+        Splited.objects
+        .filter(cost__trip_id=trip_id, payment=False, participant_id=participant_id)
+        .exclude(payer_id=participant_id)
+        .values(
+            "payer_id",
+            "payer__nickname",
+            "payer__user_id"
+        )
+        .annotate(total=Sum("split_value"))
     )
 
-    list2_dict = {item['payer_id']: item for item in list2}
-
+    owe_dict = {item["payer_id"]: item for item in i_owe_them}
     result = []
 
-    for item in list1:
-        uid = item['user_id']
-        value = item['total']
-        if uid in list2_dict:
-            value -= list2_dict[uid]['total']
-            del list2_dict[uid]
-        value = Decimal(value).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
-        result.append({
-            'user': {
-                'id': uid,
-                'username': item['user__username']
-            },
-            'value': value
-        })
+    for item in they_owe_me:
+        pid = item["participant_id"]
+        value = item["total"]
 
-    for uid, item in list2_dict.items():
-        value = Decimal(-item['total']).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
-        result.append({
-            'user': {
-                'id': uid,
-                'username': item['payer__username']
-            },
-            'value': value
-        })
+        if pid in owe_dict:
+            value -= owe_dict[pid]["total"]
+            del owe_dict[pid]
+
+        value = Decimal(value).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+        if value != 0:
+            result.append({
+                "participant": {
+                    "id": pid,
+                    "nickname": item["participant__nickname"],
+                    "user_id": item["participant__user_id"]
+                },
+                "value": value
+            })
+
+    for pid, item in owe_dict.items():
+        value = Decimal(-item["total"]).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+        if value != 0:
+            result.append({
+                "participant": {
+                    "id": pid,
+                    "nickname": item["payer__nickname"],
+                    "user_id": item["payer__user_id"]
+                },
+                "value": value
+            })
 
     return result
 
 
-def fully_settlement_with_user(trip_id, user_id, settlement_user_id):
+def fully_settlement_with_participant(trip_id, participant_id, settlement_participant_id):
+    """
+    Pełne rozliczenie pomiędzy dwoma participantami
+    """
     with transaction.atomic():
-        try:
-            splits_qs = Splited.objects.filter(
-                cost__trip__trip_id=trip_id,
-                payment=False
-            ).filter(
-                Q(payer_id=user_id, user_id=settlement_user_id) |
-                Q(payer_id=settlement_user_id, user_id=user_id)
-            )
+        splits_qs = Splited.objects.filter(
+            cost__trip_id=trip_id,
+            payment=False
+        ).filter(
+            Q(payer_id=participant_id, participant_id=settlement_participant_id) |
+            Q(payer_id=settlement_participant_id, participant_id=participant_id)
+        )
 
-            cost_ids = list(
-                splits_qs.values_list("cost_id", flat=True).distinct()
-            )
+        cost_ids = list(
+            splits_qs.values_list("cost_id", flat=True).distinct()
+        )
 
-            splits_qs.update(
-                payment=True,
-                to_pay_back_value=Decimal("0.00"),
-                pay_back_value=F("split_value")
-            )
+        splits_qs.update(
+            payment=True,
+            to_pay_back_value=Decimal("0.00"),
+            pay_back_value=F("split_value")
+        )
 
-            unpaid_cost_ids = set(
-                Splited.objects.filter(
-                    cost_id__in=cost_ids,
-                    payment=False
-                ).values_list("cost_id", flat=True)
-            )
+        unpaid_cost_ids = (
+            Splited.objects
+            .filter(cost_id__in=cost_ids, payment=False)
+            .values_list("cost_id", flat=True)
+        )
 
-            Cost.objects.filter(cost_id__in=cost_ids).update(payment=True)
-            Cost.objects.filter(cost_id__in=unpaid_cost_ids).update(payment=False)
+        Cost.objects.filter(cost_id__in=cost_ids).update(payment=True)
+        Cost.objects.filter(cost_id__in=unpaid_cost_ids).update(payment=False)
 
-            return {"ok": True, "message": "Fully settlement successful"}
-
-        except Exception as e:
-            return {"ok": False, "message": str(e)}
-
-
-
-
-
-
-
+        return {"ok": True, "message": "Fully settlement successful"}
