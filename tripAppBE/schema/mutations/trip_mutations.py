@@ -17,16 +17,15 @@ class CreateTrip(graphene.Mutation):
     class Arguments:
         title = graphene.String(required=True)
         description = graphene.String(required=False)
+        currency = graphene.String(required=True)
 
     ok = graphene.Boolean()
     trip_id = graphene.ID()
 
-    def mutate(self, info, title, description=None):
+    def mutate(self, info, title,currency, description=None):
         user = info.context.user
-        if not user.is_authenticated:
-            raise GraphQLError("Authentication required")
 
-        result = create_trip(title, description, user)
+        result = create_trip(title, description, currency, user)
         if result["ok"]:
             return CreateTrip(ok=True, trip_id=result["trip"].trip_id)
         return CreateTrip(ok=False, trip_id=None)

@@ -26,22 +26,26 @@ def get_current_participant(user, trip_id):
 class CreateCost(graphene.Mutation):
     class Arguments:
         title = graphene.String(required=True)
-        payer_id = graphene.ID(required=True)  # participant ID
+        payer_id = graphene.ID(required=True)
         trip_id = graphene.ID(required=True)
         value = graphene.Decimal(required=True)
+        currency = graphene.String(required=True)
+        description = graphene.String(required=False)
         split_object_list = graphene.List(SplitInput, required=True)
 
-    ok = graphene.Boolean()
-    message = graphene.String()
-    cost_id = graphene.ID()
+    ok = graphene.Boolean(required=True)
+    message = graphene.String(required=True)
+    cost_id = graphene.ID(required=True)
 
-    def mutate(self, info, title, payer_id, trip_id, value, split_object_list):
+    def mutate(self, info, title, payer_id, trip_id, value, currency, split_object_list, description=""):
         result = add_cost(
             trip_id=trip_id,
             title=title,
             payer_participant_id=payer_id,
             overall_value=value,
-            split_object_list=split_object_list
+            split_object_list=split_object_list,
+            currency=currency,
+            description=description
         )
         return CreateCost(
             ok=result["ok"],
@@ -57,8 +61,8 @@ class UpdateCost(graphene.Mutation):
         value = graphene.Decimal()
         payer_id = graphene.ID()  # participant ID
 
-    ok = graphene.Boolean()
-    message = graphene.String()
+    ok = graphene.Boolean(required=True)
+    message = graphene.String(required=True)
 
     def mutate(self, info, cost_id, title=None, value=None, payer_id=None):
         fields = {}
@@ -78,12 +82,13 @@ class UpdatePayment(graphene.Mutation):
         cost_id = graphene.ID(required=True)
         participant_id = graphene.ID(required=True)
         pay_back_value = graphene.Float(required=False)
+        currency = graphene.String(required=True)
 
-    ok = graphene.Boolean()
-    message = graphene.String()
+    ok = graphene.Boolean(required=True)
+    message = graphene.String(required=True)
 
-    def mutate(self, info, cost_id, participant_id, pay_back_value=None):
-        result = update_payment(cost_id, participant_id, pay_back_value)
+    def mutate(self, info, cost_id, participant_id, currency, pay_back_value=None):
+        result = update_payment(cost_id, participant_id, pay_back_value, currency)
         return UpdatePayment(ok=result["ok"], message=result["message"])
 
 
@@ -91,8 +96,8 @@ class DeleteCost(graphene.Mutation):
     class Arguments:
         cost_id = graphene.ID(required=True)
 
-    ok = graphene.Boolean()
-    message = graphene.String()
+    ok = graphene.Boolean(required=True)
+    message = graphene.String(required=True)
 
     def mutate(self, info, cost_id):
         result = delete_cost(cost_id)
@@ -104,8 +109,8 @@ class DeleteParticipantSplits(graphene.Mutation):
         cost_id = graphene.ID(required=True)
         participant_id = graphene.ID(required=True)
 
-    ok = graphene.Boolean()
-    message = graphene.String()
+    ok = graphene.Boolean(required=True)
+    message = graphene.String(required=True)
 
     def mutate(self, info, cost_id, participant_id):
         result = delete_split_by_user(cost_id, participant_id)
@@ -116,16 +121,19 @@ class FullySettlement(graphene.Mutation):
     class Arguments:
         trip_id = graphene.ID(required=True)
         settlement_participant_id = graphene.ID(required=True)
+        currency = graphene.String(required=False)
 
-    ok = graphene.Boolean()
-    message = graphene.String()
+    ok = graphene.Boolean(required=True)
+    message = graphene.String(required=True)
 
-    def mutate(self, info, trip_id, settlement_participant_id):
+    def mutate(self, info, trip_id, settlement_participant_id, currency=None):
         user = info.context.user
         participant = get_current_participant(user, trip_id)
+
         result = fully_settlement_with_participant(
-            trip_id,
+            trip_id=trip_id,
             participant_id=participant.id,
-            settlement_participant_id=settlement_participant_id
+            settlement_participant_id=settlement_participant_id,
+            currency=currency
         )
         return FullySettlement(ok=result["ok"], message=result["message"])

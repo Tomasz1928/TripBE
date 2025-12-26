@@ -10,6 +10,7 @@ class Trip(models.Model):
     name = models.CharField(max_length=30)
     description = models.TextField(max_length=30)
     created_at = models.DateTimeField(auto_now_add=True)
+    default_currency = models.TextField(max_length=5)
 
 
 class Cost(models.Model):
@@ -19,12 +20,15 @@ class Cost(models.Model):
     cost_name = models.CharField(max_length=30)
     overall_value = models.DecimalField(max_digits=10, decimal_places=2)
     payment = models.BooleanField(default=False)
+    description = models.TextField(max_length=250)
+    payed_currency = models.TextField(max_length=5)
+    overall_value_main_currency = models.DecimalField(max_digits=10, decimal_places=2)
 
 
 class TripParticipant(models.Model):
-    Join_code = models.CharField( max_length=8, db_index=True)
+    Join_code = models.CharField(max_length=8, db_index=True)
     trip = models.ForeignKey(Trip, on_delete=models.CASCADE, related_name="participants")
-    user = models.ForeignKey( User, on_delete=models.SET_NULL, null=True, blank=True)
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
     nickname = models.CharField(max_length=25)
 
     class Meta:
@@ -56,5 +60,10 @@ class Splited(models.Model):
     split_value = models.DecimalField(max_digits=10, decimal_places=2)
     to_pay_back_value = models.DecimalField(max_digits=10, decimal_places=2)
     pay_back_value = models.DecimalField(max_digits=10, decimal_places=2)
+
+    split_value_main_current = models.DecimalField(max_digits=10, decimal_places=2, null=True)
+    to_pay_back_value_main_current = models.DecimalField(max_digits=10, decimal_places=2, null=True)
+    pay_back_value_main_current = models.DecimalField(max_digits=10, decimal_places=2, null=True)
+    rate = models.DecimalField(max_digits=10, decimal_places=2)
 
 

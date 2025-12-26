@@ -16,7 +16,7 @@ class TripType(DjangoObjectType):
 
     class Meta:
         model = Trip
-        fields = ("trip_id", "trip_code", "name", "description", "created_at", "trip_owner")
+        fields = ("trip_id", "trip_code", "name", "description", "created_at", "trip_owner", "default_currency")
 
     def resolve_owner(self, info):
         return self.trip_owner_id == info.context.user.id

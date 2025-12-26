@@ -7,8 +7,8 @@ from graphql import GraphQLError
 
 
 class GetTripList(graphene.ObjectType):
-    trip_list = graphene.List(TripType)
-    trip = graphene.Field(TripType, trip_id=graphene.ID(required=True))
+    trip_list = graphene.List(TripType, required=True)
+    trip = graphene.Field(TripType, trip_id=graphene.ID(required=True), required=True)
 
     def resolve_trip_list(self, info):
         user = info.context.user

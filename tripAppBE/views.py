@@ -1,5 +1,3 @@
-from django.http import JsonResponse
+from django.shortcuts import render
 
-
-def keep_alive(request):
-    return JsonResponse({"status": "ok"})
+# Create your views here.

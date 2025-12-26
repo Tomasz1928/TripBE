@@ -20,7 +20,7 @@ def generate_code(length=8):
 # TRIP MANAGEMENT
 # ======================================================
 
-def create_trip(name, description, user):
+def create_trip(name, description, currency, user):
     """
     Tworzy nowy trip + dodaje ownera jako uczestnika
     """
@@ -31,7 +31,8 @@ def create_trip(name, description, user):
                     name=name,
                     description=description,
                     trip_owner=user,
-                    trip_code=generate_code()
+                    trip_code=generate_code(),
+                    default_currency=currency
                 )
 
                 TripParticipant.objects.create(
